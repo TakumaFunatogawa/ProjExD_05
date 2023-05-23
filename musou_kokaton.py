@@ -149,14 +149,23 @@ class Bomb(pg.sprite.Sprite):
         self.rect.centery = emy.rect.centery+emy.rect.height/2
         self.speed = 6
 
-    def update(self):
+    def update(self, score):
         """
         爆弾を速度ベクトルself.vx, self.vyに基づき移動させる
         引数 screen：画面Surface
         """
         self.rect.move_ip(+self.speed*self.vx, +self.speed*self.vy)
-        if check_bound(self.rect) != (True, True):
-            self.kill()
+        yoko, tate = check_bound(self.rect)
+        if (yoko, tate) != (True, True):
+            if (score < 100):    # スコアが100以下の時、壁に当たると消える
+                self.kill()
+            if (score >= 100):   # スコアが100以上の時、壁で跳ね返る
+                if not yoko:
+                    self.vx *= -1
+                if not tate:
+                    self.vy *= -1
+            if (score >= 200):   # スコアが200以上の時、速さが1.15倍される
+                self.speed *= 1.15
 
 
 class Beam(pg.sprite.Sprite):
@@ -244,7 +253,6 @@ class Enemy(pg.sprite.Sprite):
     敵機に関するクラス
     """
     imgs = [pg.image.load(f"ex04/fig/alien{i}.png") for i in range(1, 4)]
-    
     def __init__(self):
         super().__init__()
         self.image = random.choice(__class__.imgs)
@@ -271,7 +279,6 @@ class Gravity(pg.sprite.Sprite):
     """
     重力球を発生させるクラス
     """
-
     delta = {  # 押下キーと移動量の辞書
         pg.K_UP: (0, -1),
         pg.K_DOWN: (0, +1),
@@ -341,7 +348,7 @@ class Score:
 
 
 def main():
-    pg.display.set_caption("真！こうかとん無双")
+    pg.display.set_caption("真！こうかとん無双・改")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
     bg_img = pg.image.load("ex04/fig/pg_bg.jpg")
     score = Score()
@@ -417,7 +424,7 @@ def main():
         beams.draw(screen)
         emys.update()
         emys.draw(screen)
-        bombs.update()
+        bombs.update(score=score.score)
         bombs.draw(screen)
         exps.update()
         exps.draw(screen)
